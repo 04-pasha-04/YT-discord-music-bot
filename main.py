@@ -39,6 +39,8 @@ async def play_next(interaction: nextcord.Interaction):
     await check_queue(guild.id, interaction)
 
 
+loop = asyncio.get_event_loop()
+
 @bot.slash_command(description="Play a song by name or link")
 async def play(interaction: nextcord.Interaction, arg: str):
     if arg.__contains__(".com"):
@@ -75,7 +77,7 @@ async def play(interaction: nextcord.Interaction, arg: str):
                     if guild.id not in queues:
                         queues[guild.id] = []
                     vc.play(FFmpegPCMAudio(info.get('url'), **FFMPEG_OPTIONS),
-                            after=await check_queue(guild.id, interaction))
+                            after=lambda e: loop.create_task(check_queue(guild.id, interaction)))
                     view = Play()
                     await interaction.send("playing " + video_name, view=view)
 
@@ -91,7 +93,7 @@ async def check_queue(id, interaction):
         vc.stop()
         info = queues[id].pop(0)
         vc.play(FFmpegPCMAudio(info.get('url'), **FFMPEG_OPTIONS),
-                after=lambda e: check_queue_coroutine(id, interaction))
+                after=lambda e: loop.create_task(check_queue(id, interaction)))
         view = Play()
         queue = []
         for song in queues[id]:
@@ -104,4 +106,4 @@ def check_queue_coroutine(id, interaction):
     loop.create_task(check_queue(id, interaction))
 
 
-bot.run('YOUR_TOKEN')
+bot.run('Your token goes here!')
