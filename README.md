@@ -19,4 +19,4 @@ also you will need to have yt_dlp and ffmpeg installed on your system and added 
 
 
 
-replace the 'Your token goes here!' string on the last line of code with your discord bot token that you received from dicsord developers poratal
+replace the 'Your token goes here!' string on the last line of code with your discord bot token that you received from discord developers poratal
