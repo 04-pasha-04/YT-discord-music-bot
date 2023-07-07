@@ -1,10 +1,11 @@
 import asyncio
-
 import nextcord
 from discord import FFmpegPCMAudio
 from discord.ext import commands
 from nextcord.utils import get
 from yt_dlp import YoutubeDL
+from youtubesearchpython import VideosSearch
+
 
 bot = commands.Bot()
 guilds = []
@@ -40,6 +41,7 @@ async def play_next(interaction: nextcord.Interaction):
 
 
 loop = asyncio.get_event_loop()
+
 
 @bot.slash_command(description="Play a song by name or link")
 async def play(interaction: nextcord.Interaction, arg: str):
@@ -80,6 +82,41 @@ async def play(interaction: nextcord.Interaction, arg: str):
                             after=lambda e: loop.create_task(check_queue(guild.id, interaction)))
                     view = Play()
                     await interaction.send("playing " + video_name, view=view)
+    else:
+        videos_search = VideosSearch(arg, limit = 1)
+        user = interaction.user
+        guild = interaction.guild
+
+        if not user.voice:
+            await interaction.send("You are not connected to a voice channel!")
+            return
+
+        if not guild.id in instances:
+            vc = await user.voice.channel.connect()
+            instances[guild.id] = vc
+        else:
+            vc = instances[guild.id]
+
+        with YoutubeDL(YDL_OPTIONS) as ydl:
+            info = ydl.extract_info(videos_search.result()['result'][0].get('link'), download=False)
+            video_name = info.get('title')
+            if guild.id in queues and queues[guild.id] != [] or vc.is_playing():
+                queues.setdefault(guild.id, []).append(info)
+                await interaction.send('added to queue ')
+                view = Play()
+                queue = []
+                for song in queues[guild.id]:
+                    queue.append(song.get('title') + '\n')
+                await interaction.send(
+                    "added " + video_name + " to queue" + '\n' + 'queue: ' + '\n' + ''.join(queue), view=view)
+
+            else:
+                if guild.id not in queues:
+                    queues[guild.id] = []
+                vc.play(FFmpegPCMAudio(info.get('url'), **FFMPEG_OPTIONS),
+                        after=lambda e: loop.create_task(check_queue(guild.id, interaction)))
+                view = Play()
+                await interaction.send("playing " + video_name, view=view)
 
 
 def is_connected(interaction):
