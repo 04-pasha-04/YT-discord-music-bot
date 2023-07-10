@@ -14,6 +14,9 @@ discord (https://pypi.org/project/discord.py/)
 yt_dlp (https://pypi.org/project/yt-dlp/)
 
 
+youtube_search (https://pypi.org/project/youtube-search/)
+
+
 
 also you will need to have yt_dlp and ffmpeg installed on your system and added to path
 
